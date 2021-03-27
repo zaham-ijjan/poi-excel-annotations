@@ -16,8 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AnnotatedCellWriter extends FieldReader {
-	private final static Logger log = LoggerFactory.getLogger(AnnotatedCellWriter.class);
+	private static final  Logger log = LoggerFactory.getLogger(AnnotatedCellWriter.class);
+
 	private Function<Object, Object> numericConverter;
+
 	private Function<Object, Date> dateConverter;
 
 	public AnnotatedCellWriter(Field field) {
@@ -25,45 +27,38 @@ public class AnnotatedCellWriter extends FieldReader {
 	}
 
 	public void initDateConverter() {
-		if (field.getType() == Date.class) {
-			dateConverter = (Object obj) -> (Date) this.getObject(obj);
-		} else if (field.getType() == LocalDate.class) {
-			dateConverter = (Object obj) -> DateUtil.asDate((LocalDate) this.getObject(obj));
-		} else if (field.getType() == LocalDateTime.class) {
-			dateConverter = (Object obj) -> DateUtil.asDate((LocalDateTime) this.getObject(obj));
-		} else if (field.getType() == OffsetDateTime.class) {
-			dateConverter = (Object obj) -> DateUtil.asDate((OffsetDateTime) this.getObject(obj));
-		} else if (field.getType() == ZonedDateTime.class) {
-			dateConverter = (Object obj) -> DateUtil.asDate((ZonedDateTime) this.getObject(obj));
-		} else {
-			dateConverter = (Object obj) -> DateUtil
-					.parse(ObjectUtils.defaultIfNull(this.getObject(obj), "").toString());
-		}
+
+		dateConverter = (Object obj) ->{
+			if (field.getType() == Date.class) {
+				return this.getValue(obj,Date.class);
+			} else if (field.getType() == LocalDate.class) {
+				return DateUtil.asDate(this.getValue(obj,LocalDate.class));
+			} else if (field.getType() == LocalDateTime.class) {
+				return DateUtil.asDate(this.getValue(obj,LocalDateTime.class));
+			} else if (field.getType() == OffsetDateTime.class) {
+				return DateUtil.asDate(this.getValue(obj,OffsetDateTime.class));
+			} else if (field.getType() == ZonedDateTime.class) {
+				return DateUtil.asDate(this.getValue(obj,ZonedDateTime.class));
+			} else {
+				return DateUtil.parse(ObjectUtils.defaultIfNull(obj, "").toString());
+			}
+		};
 	}
 
-	public void initNumericConverter() {
-		if (field.getType() == int.class || field.getType() == Integer.class) {
-			numericConverter = (Object obj) -> this.getInt(obj);
-		} else if (field.getType() == float.class || field.getType() == Float.class) {
-			numericConverter = (Object obj) -> this.getFloat(obj);
-		} else if (field.getType() == double.class || field.getType() == Double.class) {
-			numericConverter = (Object obj) -> this.getDouble(obj);
-		} else if (field.getType() == long.class || field.getType() == Long.class) {
-			numericConverter = (Object obj) -> this.getLong(obj);
-		} else {
-			numericConverter = (Object obj) -> this.getObject(obj);
-		}
-	}
 
-	public void writeNumeric(Cell cell, Object obj) {
+	public <T> void initNumericConverter(Class<T> clazz) {
+		numericConverter = (Object obj) -> this.getValue(obj,clazz);
+
+	}
+	public void  writeNumeric(Cell cell, Object obj) {
 		Object genericObject = numericConverter.apply(obj);
 		if (genericObject == null) {
-			log.debug("An Excel of numeric cell family is null. Not writing anything. Cell: " + cell);
+			log.debug("An Excel of numeric cell family is null. Not writing anything. Cell: {} " , cell);
 		}
 		try {
-			cell.setCellValue(Double.parseDouble(genericObject.toString()));
+			cell.setCellValue(Double.parseDouble(String.valueOf(genericObject)));
 		} catch (Exception cce) {
-			log.debug("An Excel cell is not recognized as Integer. Not writing anything in this cell: " + cell);
+			log.debug("An Excel cell is not recognized as Integer. Not writing anything in this cell: {}" , cell);
 		}
 	}
 
@@ -72,7 +67,7 @@ public class AnnotatedCellWriter extends FieldReader {
 			Date value = dateConverter.apply(obj);
 			cell.setCellValue(value);
 		} catch (IllegalArgumentException e) {
-			log.warn("Unable to write Date to an Excel cell : " + cell + ". Defaulting to blank.");
+			log.warn("Unable to write Date to an Excel cell : {}. Defaulting to blank.",cell);
 		}
 	}
 }

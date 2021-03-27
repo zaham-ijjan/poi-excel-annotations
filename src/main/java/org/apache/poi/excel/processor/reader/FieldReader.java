@@ -1,9 +1,10 @@
 package org.apache.poi.excel.processor.reader;
 
-import java.lang.reflect.Field;
-
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
 
 /**
  * A generalization of the Reflection - translation utilities.
@@ -11,107 +12,28 @@ import org.slf4j.LoggerFactory;
  * @author ssp5zone
  */
 public class FieldReader {
-	private final static Logger log = LoggerFactory.getLogger(FieldReader.class);
+	private static final  Logger log = LoggerFactory.getLogger(FieldReader.class);
+
 	protected Field field;
 
 	public FieldReader(Field field) {
 		this.field = field;
 	}
 
+
+
 	/**
-	 * Gets the generic object from a reflection field. <br>
-	 * The only reason for writing this separately was to reduce the exception
-	 * checks redundancies.
-	 * 
-	 * @param obj The object
-	 * @return The object
+	 * this method is more generic than the previous ones it's much easier to specify the class type
+	 * and cast it instead of creating for each type his own class as for the exception ,it will handled automatically with
+	 * @Sneakythrows since it's a runtime Exception
+	 * @param obj
+	 * @param clazz
+	 * @param <T>
+	 * @return
 	 */
-	public Object getObject(Object obj) {
-		try {
-			return field.get(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			return null;
-		}
+	@SneakyThrows
+	public <T> T getValue(Object obj , Class<T> clazz){
+		return clazz.cast(field.get(obj));
 	}
 
-	public int getInt(Object obj) {
-		try {
-			return field.getInt(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return 0;
-		}
-	}
-
-	public float getFloat(Object obj) {
-		try {
-			return field.getFloat(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return 0;
-		}
-	}
-
-	public double getDouble(Object obj) {
-		try {
-			return field.getDouble(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return 0;
-		}
-	}
-
-	public long getLong(Object obj) {
-		try {
-			return field.getLong(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return 0;
-		}
-	}
-
-	public short getShort(Object obj) {
-		try {
-			return field.getShort(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return 0;
-		}
-	}
-
-	public byte getByte(Object obj) {
-		try {
-			return field.getByte(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return 0;
-		}
-	}
-
-	public char getChar(Object obj) {
-		try {
-			return field.getChar(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return ' ';
-		}
-	}
-
-	public boolean getBoolean(Object obj) {
-		try {
-			return field.getBoolean(obj);
-		} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-			log.warn("Unable to read field from the paseed excel object. The error was: ", e);
-			;
-			return false;
-		}
-	}
 }

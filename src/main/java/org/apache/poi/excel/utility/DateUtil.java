@@ -10,11 +10,15 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.poi.excel.exception.DateConverterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DateUtil {
-	private final static Logger log = LoggerFactory.getLogger(DateUtil.class);
+	private static final  Logger log = LoggerFactory.getLogger(DateUtil.class);
+
+	private DateUtil() {
+	}
 
 	/** The Constant DATE_FORMAT_YYYY_MM_DD. */
 	public static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
@@ -25,8 +29,14 @@ public class DateUtil {
 	 * @param localDate the local date
 	 * @return the date
 	 */
+
+	/**
+	 * always shose the system zoneId so that the library picks the machine local date instead of specific location
+	 * @param localDate
+	 * @return
+	 */
 	public static Date asDate(LocalDate localDate) {
-		return Date.from(localDate.atStartOfDay().atZone(ZoneId.of("America/New_York")).toInstant());
+		return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	/**
@@ -36,7 +46,7 @@ public class DateUtil {
 	 * @return the date
 	 */
 	public static Date asDate(LocalDateTime localDateTime) {
-		return Date.from(localDateTime.atZone(ZoneId.of("America/New_York")).toInstant());
+		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	/**
@@ -101,7 +111,7 @@ public class DateUtil {
 					// No time. Use it as a Date.
 					parsedDate = asDate(LocalDate.from(ta));
 				} else {
-					throw new Exception("Cannot understand date-time format");
+					throw new DateConverterException("Cannot understand date-time format");
 				}
 			} catch (Exception p) {
 				log.warn("The date was not in the standard format. Trying other known date formats.");
@@ -111,9 +121,8 @@ public class DateUtil {
 					parsedDate = DateUtils.parseDate(timestamp,
 							new String[] { "MM/dd/yyyy", "MM/dd/yy", "yyyy/MM/dd", "yy/MM/dd", "mmddyy", "ddmmyy",
 									"MMM dd, yy", "MMM dd, yyyy", "EEE, d MMM yyyy HH:mm:ss Z" });
-					;
 				} catch (Exception pex) {
-					log.error("Unable to parse the passed date: '" + timestamp + "' to any known format");
+					log.error("Unable to parse the passed date: ' {} ' to any known format",timestamp);
 				}
 			}
 		}

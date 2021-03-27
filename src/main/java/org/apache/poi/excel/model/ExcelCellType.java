@@ -62,7 +62,7 @@ public enum ExcelCellType {
 	 */
 	DEFAULT("");
 
-	private String format;
+	private final String format;
 
 	ExcelCellType(String format) {
 		this.format = format;

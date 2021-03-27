@@ -49,21 +49,7 @@ public class CellWriterFactory {
 	public BiConsumer<Cell, Object> getGenericFieldWriter(Field field) {
 		Class<?> fieldClass = field.getType();
 		GenericCellWriter cellWriter = new GenericCellWriter(field, container);
-		if (fieldClass == Integer.class || fieldClass == int.class) {
-			return cellWriter.intWriter;
-		} else if (fieldClass == Short.class || fieldClass == short.class) {
-			return cellWriter.shortWriter;
-		} else if (fieldClass == Long.class || fieldClass == long.class) {
-			return cellWriter.longWriter;
-		} else if (fieldClass == Double.class || fieldClass == double.class) {
-			return cellWriter.doubleWriter;
-		} else if (fieldClass == Float.class || fieldClass == float.class) {
-			return cellWriter.floatWriter;
-		} else if (fieldClass == Byte.class || fieldClass == byte.class) {
-			return cellWriter.byteWriter;
-		} else if (fieldClass == Character.class || fieldClass == char.class) {
-			return cellWriter.charWriter;
-		} else if (fieldClass == Boolean.class || fieldClass == boolean.class) {
+		if (fieldClass == Boolean.class || fieldClass == boolean.class) {
 			return cellWriter.booleanWriter;
 		} else if (fieldClass == Date.class) {
 			return cellWriter.utilDateWriter;
@@ -71,8 +57,10 @@ public class CellWriterFactory {
 			return cellWriter.calendarWriter;
 		} else if (fieldClass == java.sql.Date.class) {
 			return cellWriter.sqlDateWriter;
-		} else {
+		} else if (fieldClass ==String.class){
 			return cellWriter.stringWriter;
+		}else {
+			return cellWriter.writer;
 		}
 	}
 
@@ -99,31 +87,31 @@ public class CellWriterFactory {
 								value = attrValue.toString();
 							}
 						} catch (IllegalArgumentException | IllegalAccessException e) {
-							log.warn("Unable to write generic excel cell : " + cell + ". Defaulting to blank.");
+							log.warn("Unable to write generic excel cell : {}. Defaulting to blank.",cell);
 						}
 						cell.setCellValue(value);
 						cell.setCellStyle(container.getStyle(ExcelCellType.GENERAL));
 					});
 				case INTEGER:
-					cellWriter.initNumericConverter();
+					cellWriter.initNumericConverter(Integer.class);
 					return ((Cell cell, Object obj) -> {
 						cellWriter.writeNumeric(cell, obj);
 						cell.setCellStyle(container.getStyle(ExcelCellType.INTEGER));
 					});
 				case DECIMAL:
-					cellWriter.initNumericConverter();
+					cellWriter.initNumericConverter(Float.class);
 					return ((Cell cell, Object obj) -> {
 						cellWriter.writeNumeric(cell, obj);
 						cell.setCellStyle(container.getStyle(ExcelCellType.DECIMAL));
 					});
 				case PRECISE:
-					cellWriter.initNumericConverter();
+					cellWriter.initNumericConverter(Double.class);
 					return ((Cell cell, Object obj) -> {
 						cellWriter.writeNumeric(cell, obj);
 						cell.setCellStyle(container.getStyle(ExcelCellType.PRECISE));
 					});
 				case CURRENCY:
-					cellWriter.initNumericConverter();
+					cellWriter.initNumericConverter(Integer.class);
 					return ((Cell cell, Object obj) -> {
 						cellWriter.writeNumeric(cell, obj);
 						cell.setCellStyle(container.getStyle(ExcelCellType.CURRENCY));
@@ -141,7 +129,7 @@ public class CellWriterFactory {
 						cell.setCellStyle(container.getStyle(ExcelCellType.DATETIME));
 					});
 				case PERCENT:
-					cellWriter.initNumericConverter();
+					cellWriter.initNumericConverter(String.class);
 					return ((Cell cell, Object obj) -> {
 						cellWriter.writeNumeric(cell, obj);
 						cell.setCellStyle(container.getStyle(ExcelCellType.PERCENT));

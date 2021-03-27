@@ -117,7 +117,7 @@ import freemarker.template.utility.StringUtil;
  * @see ExcelSheet
  */
 public class ExcelWriter {
-	private final static Logger log = LoggerFactory.getLogger(ExcelWriter.class);
+	private static final  Logger log = LoggerFactory.getLogger(ExcelWriter.class);
 
 	/**
 	 * Initialize the file storage directory
@@ -138,9 +138,9 @@ public class ExcelWriter {
 	 */
 	@SafeVarargs
 	public static <T> File write(String path, String fileName, List<? extends T>... data) {
-		List<List<?>> filteredData = Arrays.asList(data).stream().filter(nonEmptyData).collect(Collectors.toList());
+		List<List<?>> filteredData = Arrays.stream(data).filter(nonEmptyData).collect(Collectors.toList());
 		// If there is no data in any sheet, do not process further
-		if (filteredData.size() > 0) {
+		if (!filteredData.isEmpty()) {
 			// This is important to ensure that we multiple Threads do not call this
 			// at-once.
 			// The context switching happening here is heavy and may cause the whole system
@@ -150,10 +150,10 @@ public class ExcelWriter {
 				ExcelWriter.initWorkBook();
 
 				// Process each sheet one by one
-				filteredData.forEach(list -> {
+				filteredData.forEach(list ->
 					createSheet.andThen(generateName).andThen(giveHeading).andThen(addColumns).andThen(writeData)
-							.andThen(autoSizeColumns).andThen(freezePane).andThen(attachFilters).apply(list);
-				});
+							.andThen(autoSizeColumns).andThen(freezePane).andThen(attachFilters).apply(list)
+				);
 
 				// Write to actual location
 				return writeToFile(path, fileName);
@@ -172,12 +172,12 @@ public class ExcelWriter {
 	/**
 	 * A simple predicate to check for a non-empty list object
 	 */
-	private static Predicate<List<?>> nonEmptyData = data -> data != null && data.size() > 0;
+	private static final Predicate<List<?>> nonEmptyData = data -> data != null && !data.isEmpty();
 
 	/**
 	 * A function that creates a new sheet from the existing workbook.
 	 */
-	private static Function<List<?>, SheetContainer> createSheet = (List<?> data) -> {
+	private static final Function<List<?>, SheetContainer> createSheet = (List<?> data) -> {
 		SheetContainer sheetContainer = new SheetContainer();
 		sheetContainer.setSheet(workbookContainer.getWorkbook().createSheet());
 		sheetContainer.setData(data);
@@ -188,7 +188,7 @@ public class ExcelWriter {
 	 * Generate a Sheet Name based on the Excel annotations -> ExcelSheet.sheetName
 	 * If no annotation or a name is found, just use the Class Name as is.
 	 */
-	private static Function<SheetContainer, SheetContainer> generateName = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> generateName = (SheetContainer sheetContainer) -> {
 		Workbook workbook = workbookContainer.getWorkbook();
 		Sheet sheet = sheetContainer.getSheet();
 
@@ -230,7 +230,7 @@ public class ExcelWriter {
 	 * Add a simple 2 line description of Line 1 : What this sheet is? (Sheet's
 	 * Name) Line 2 : When was this generated? (Current Time)
 	 */
-	private static Function<SheetContainer, SheetContainer> giveHeading = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> giveHeading = (SheetContainer sheetContainer) -> {
 		Sheet sheet = sheetContainer.getSheet();
 		String heading = sheetContainer.getHeading();
 
@@ -283,7 +283,7 @@ public class ExcelWriter {
 	 * parsing the pojo fields. !!IMPORTANT!! If even 1 @ExcelCell annotation is
 	 * found, it would then keep only those fields that are annotated
 	 */
-	private static Function<SheetContainer, SheetContainer> addColumns = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> addColumns = (SheetContainer sheetContainer) -> {
 		Sheet sheet = sheetContainer.getSheet();
 		List<?> data = sheetContainer.getData();
 
@@ -322,7 +322,7 @@ public class ExcelWriter {
 			};
 
 			// If at-least 1 annotation is present
-			if (annotatedFields.size() > 0) {
+			if (!annotatedFields.isEmpty()) {
 				// Process only the fields that have annotations
 				annotatedFields.forEach((Field field) -> {
 
@@ -362,7 +362,7 @@ public class ExcelWriter {
 	/**
 	 * The one responsible for writing actual data each cell.
 	 */
-	private static Function<SheetContainer, SheetContainer> writeData = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> writeData = (SheetContainer sheetContainer) -> {
 		Sheet sheet = sheetContainer.getSheet();
 		List<?> dataList = sheetContainer.getData();
 		try {
@@ -433,7 +433,7 @@ public class ExcelWriter {
 	 * Resizes all the columns to ensure that all the data becomes visible.
 	 * !!DANGER!! : Very slow. Avoid using this.
 	 */
-	private static Function<SheetContainer, SheetContainer> autoSizeColumns = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> autoSizeColumns = (SheetContainer sheetContainer) -> {
 		Sheet sheet = sheetContainer.getSheet();
 
 		// In case of SXSSFSheet, the row tracking is limited and hence cannot be used
@@ -450,7 +450,7 @@ public class ExcelWriter {
 	/**
 	 * Freeze first 4 rows if a heading is present, else only 1 row
 	 */
-	private static Function<SheetContainer, SheetContainer> freezePane = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> freezePane = (SheetContainer sheetContainer) -> {
 		Sheet sheet = sheetContainer.getSheet();
 		int frozenRows = sheetContainer.getHeading().equals("") ? 1 : 4;
 		sheet.createFreezePane(0, frozenRows);
@@ -460,7 +460,7 @@ public class ExcelWriter {
 	/**
 	 * Add filters to the column header row
 	 */
-	private static Function<SheetContainer, SheetContainer> attachFilters = (SheetContainer sheetContainer) -> {
+	private static final Function<SheetContainer, SheetContainer> attachFilters = (SheetContainer sheetContainer) -> {
 		Sheet sheet = sheetContainer.getSheet();
 
 		// Get the row in which filter is to be applied
@@ -484,7 +484,7 @@ public class ExcelWriter {
 	 * @param fullPath
 	 * @return The generated file.
 	 */
-	private static File writeToFile(String path, String fileName) {
+	private static final File writeToFile(String path, String fileName) {
 		FileOutputStream fos = null;
 		Workbook workbook = null;
 		try {
@@ -538,7 +538,7 @@ public class ExcelWriter {
 	 * @param camelCaseString
 	 * @return Simple Readable String
 	 */
-	private static String parseCamelCase(String camelCaseString) {
+	private static final String parseCamelCase(String camelCaseString) {
 		if (camelCaseString == null) {
 			return "";
 		} else {

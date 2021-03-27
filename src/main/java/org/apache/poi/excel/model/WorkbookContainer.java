@@ -17,11 +17,11 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
  */
 public class WorkbookContainer {
 
-	private Workbook workbook;
+	private final Workbook workbook;
 
 	private Map<ExcelCellType, CellStyle> styles;
 
-	private CellWriterFactory writerFactory;
+	private final CellWriterFactory writerFactory;
 
 	public WorkbookContainer() {
 		// SXSSFWorkbook is whooping 300 times faster!!!!!!!!!!!!!!
@@ -39,7 +39,7 @@ public class WorkbookContainer {
 	}
 
 	private void initStyles() {
-		this.styles = new HashMap<ExcelCellType, CellStyle>();
+		this.styles = new HashMap<>();
 		for (ExcelCellType type : ExcelCellType.values()) {
 			this.styles.put(type, type.getCellStyle(workbook));
 		}
